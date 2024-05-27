@@ -1,0 +1,54 @@
+const express = require('express');
+const jwt = require('jsonwebtoken');
+const bcrypt = require('bcryptjs');
+const { createUser, getUserByEmail } = require('../models/userModel');
+
+const router = express.Router();
+
+// Ruta de registro
+router.post('/register', async (req, res) => {
+  try {
+    const { email, password, full_name, role } = req.body;
+    await createUser(email, password, full_name, role);
+    res.status(201).json({ message: 'User created successfully' });
+  } catch (error) {
+    console.log('Error creating user:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Ruta de login
+router.post('/login', async (req, res) => {
+  try {
+    const { email, password } = req.body;
+    const user = await getUserByEmail(email);
+
+    if (!user) {
+      console.log('User not found');
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    const isMatch = await bcrypt.compare(password, user.password);
+
+    if (!isMatch) {
+      console.log('Invalid credentials');
+      return res.status(401).json({ message: 'Invalid credentials' });
+    }
+
+    console.log('JWT_SECRET:', process.env.JWT_SECRET);
+
+    const token = jwt.sign(
+      { id: user.id, email: user.email, full_name: user.full_name, role: user.role },
+      process.env.JWT_SECRET,
+      { expiresIn: '1h' }
+    );
+
+    console.log('Token generated:', token);
+    res.status(200).json({ token });
+  } catch (error) {
+    console.log('Error during login:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+module.exports = router;
