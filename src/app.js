@@ -15,11 +15,13 @@ app.use(express.json());// Middleware para parsear JSON
 const cvRoutes = require('./routes/cvRoutes');
 const authRoutes = require('./routes/authRoutes');
 const jobRoutes = require('./routes/jobRoutes')
+const applicationRoutes = require('./routes/applicationRoutes');
 
 // Usar rutas
-app.use('/upload-cv', cvRoutes);
+app.use('/cv', cvRoutes);
 app.use('/auth', authRoutes);
 app.use('/jobs', jobRoutes);
+app.use('/applications', applicationRoutes);
 
 // Ruta de prueba
 app.get('/', (req, res) => {

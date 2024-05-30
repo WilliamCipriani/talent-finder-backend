@@ -1,6 +1,6 @@
 const express = require('express');
 const jwt = require('jsonwebtoken');
-const { createJob, addResponsibility, addQualification, addBenefit } = require('../models/jobModel');
+const { getAllJobs, getJobById, createJob, addResponsibility, addQualification, addBenefit } = require('../models/jobModel');
 
 const router = express.Router();
 
@@ -73,6 +73,33 @@ router.post('/apply-job', authenticateToken, async (req, res) => {
   } catch (error) {
     console.error('Error applying for job:', error);
     res.status(500).json({ error: 'Error applying for job' });
+  }
+});
+
+// Endpoint para obtener todos los trabajos
+router.get('/jobs', async (req, res) => {
+  try {
+    const jobs = await getAllJobs();
+    res.json(jobs);
+  } catch (err) {
+    console.error('Error fetching jobs:', err);
+    res.status(500).send({ error: 'Error fetching jobs' });
+  }
+});
+
+// Endpoint para obtener los detalles de un trabajo específico
+router.get('/jobs/:id', async (req, res) => {
+  const jobId = req.params.id;
+  try {
+    const job = await getJobById(jobId);
+    if (job) {
+      res.json(job);
+    } else {
+      res.status(404).send({ error: 'Job not found' });
+    }
+  } catch (err) {
+    console.error('Error fetching job details:', err);
+    res.status(500).send({ error: 'Error fetching job details' });
   }
 });
 

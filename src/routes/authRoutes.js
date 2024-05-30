@@ -8,11 +8,11 @@ const router = express.Router();
 // Ruta de registro
 router.post('/register', async (req, res) => {
   try {
-    const { email, password, full_name, role } = req.body;
-    await createUser(email, password, full_name, role);
+    const { email, password, full_name, role_id = 1 } = req.body; // Asigna un valor predeterminado de 1
+    await createUser(email, password, full_name, role_id);
     res.status(201).json({ message: 'User created successfully' });
   } catch (error) {
-    console.log('Error creating user:', error);
+    console.error('Error creating user:', error); // Loguea el error
     res.status(500).json({ error: error.message });
   }
 });

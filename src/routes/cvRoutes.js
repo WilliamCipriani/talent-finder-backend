@@ -1,76 +1,59 @@
 const express = require('express');
 const multer = require('multer');
-const cloudinary = require('cloudinary').v2;
-const jwt = require('jsonwebtoken');
-const { saveCV } = require('../models/cvModel');
+const cloudinary = require('../config/cloudinary');
+const { createCV, getUserCV } = require('../models/cvModel'); // Asegúrate de importar getUserCV
+const authenticate = require('../middleware/auth');
 
 const router = express.Router();
-const upload = multer({ storage: multer.memoryStorage() });
 
-cloudinary.config({
-  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
-  api_key: process.env.CLOUDINARY_API_KEY,
-  api_secret: process.env.CLOUDINARY_API_SECRET,
+const storage = multer.memoryStorage(); // Usar almacenamiento en memoria
+const upload = multer({ storage: storage });
+
+router.post('/upload', authenticate, upload.single('cv'), async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const originalFilename = req.file.originalname.replace(/\.[^/.]+$/, "");
+    // Subir a Cloudinary
+    const result = await new Promise((resolve, reject) => {
+        const stream = cloudinary.uploader.upload_stream(
+          {
+            resource_type: 'raw',
+            public_id: `cv_uploads/${originalFilename}` // Coloca el archivo en una carpeta cv_uploads y usa el nombre original
+          },
+          (error, result) => {
+            if (error) {
+              reject(new Error('Error uploading to Cloudinary'));
+            } else {
+              resolve(result);
+            }
+          }
+        );
+        stream.end(req.file.buffer);
+      });
+    const publicId = result.public_id;
+    const secureUrl = result.secure_url;
+
+    // Guardar en la base de datos
+    await createCV(userId, publicId, secureUrl);
+
+    res.status(201).json({ message: 'CV subido exitosamente' });
+  } catch (error) {
+    console.error('Error al subir el CV:', error);
+    res.status(500).json({ error: error.message });
+  }
 });
 
-// Middleware para verificar el token y obtener el user_id
-const authenticateToken = (req, res, next) => {
-  const authHeader = req.headers['authorization'];
-  const token = authHeader && authHeader.split(' ')[1];
-
-  if (token == null) {
-    console.log('No token provided');
-    return res.sendStatus(401);
-  }
-
-  console.log('Token received:', token);
-  console.log('JWT_SECRET:', process.env.JWT_SECRET);
-
-  jwt.verify(token, process.env.JWT_SECRET, (err, user) => {
-    if (err) {
-      console.log('Token verification failed:', err);
-      return res.sendStatus(403);
-    }
-    console.log('Token verification successful:', user);
-    req.user = user;
-    next();
-  });
-};
-
-router.post('/', authenticateToken, upload.single('cv'), async (req, res) => {
+router.get('/user-cv', authenticate, async (req, res) => {
   try {
-    const file = req.file;
-    if (!file) {
-      console.log('No file uploaded');
-      return res.status(400).json({ error: 'No file uploaded' });
+    const userId = req.user.id;
+    const cv = await getUserCV(userId);
+    if (cv) {
+      res.status(200).json(cv);
+    } else {
+      res.status(404).json({ message: 'No CV found' });
     }
-
-    const user_id = req.user.id;
-    console.log('User ID from token:', user_id);
-
-    const result = await new Promise((resolve, reject) => {
-      const uploadStream = cloudinary.uploader.upload_stream({ resource_type: 'raw' }, (error, result) => {
-        if (error) {
-          console.log('Error uploading to Cloudinary:', error);
-          reject(error);
-        } else {
-          console.log('Upload to Cloudinary successful:', result);
-          resolve(result);
-        }
-      });
-      uploadStream.end(file.buffer);
-    });
-
-    const { public_id, secure_url } = result;
-    await saveCV(user_id, public_id, secure_url);
-
-    res.status(200).json({
-      message: 'CV uploaded and saved to database successfully',
-      public_id,
-      secure_url,
-    });
   } catch (error) {
-    console.log('Error processing request:', error);
+    console.error('Error al obtener el CV:', error);
     res.status(500).json({ error: error.message });
   }
 });

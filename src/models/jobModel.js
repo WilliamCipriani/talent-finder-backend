@@ -1,4 +1,5 @@
 const { poolPromise } = require('../config/db');
+const sql = require('mssql');
 
 const createJob = async (company, type, title, location, salaryRange, description) => {
   try {
@@ -14,6 +15,49 @@ const createJob = async (company, type, title, location, salaryRange, descriptio
     return result.recordset[0].id;
   } catch (error) {
     throw new Error('Error creating job');
+  }
+};
+
+// Función para obtener todos los trabajos
+const getAllJobs = async () => {
+  try {
+    const pool = await poolPromise;
+    const result = await pool.request().query('SELECT id, title, company, type, location, salaryRange, description FROM Jobs');
+    return result.recordset;
+  } catch (err) {
+    throw new Error('Error fetching jobs');
+  }
+};
+
+// Función para obtener los detalles de un trabajo específico
+const getJobById = async (jobId) => {
+  try {
+    const pool = await poolPromise;
+    const jobResult = await pool.request()
+      .input('id', sql.Int, jobId)
+      .query('SELECT * FROM Jobs WHERE id = @id');
+    const job = jobResult.recordset[0];
+
+    if (job) {
+      const responsibilitiesResult = await pool.request()
+        .input('job_id', sql.Int, jobId)
+        .query('SELECT responsibility FROM Responsibilities WHERE job_id = @job_id');
+      job.responsibilities = responsibilitiesResult.recordset.map(r => r.responsibility).join('\n');
+
+      const qualificationsResult = await pool.request()
+        .input('job_id', sql.Int, jobId)
+        .query('SELECT qualification FROM Qualifications WHERE job_id = @job_id');
+      job.qualifications = qualificationsResult.recordset.map(q => q.qualification).join('\n');
+
+      const benefitsResult = await pool.request()
+        .input('job_id', sql.Int, jobId)
+        .query('SELECT benefit FROM Benefits WHERE job_id = @job_id');
+      job.benefits = benefitsResult.recordset.map(b => b.benefit).join('\n');
+    }
+
+    return job;
+  } catch (err) {
+    throw new Error('Error fetching job details');
   }
 };
 
@@ -55,7 +99,9 @@ const addBenefit = async (job_id, benefit) => {
 
 module.exports = {
   createJob,
+  getAllJobs,
+  getJobById,
   addResponsibility,
   addQualification,
-  addBenefit
+  addBenefit,
 };
