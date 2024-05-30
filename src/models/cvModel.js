@@ -15,13 +15,13 @@ async function createCV(userId, publicId, secureUrl) {
 
 async function getUserCV(userId) {
   try {
-      const pool = await poolPromise;
-      const result = await pool.request()
-          .input('user_id', sql.Int, userId)
-          .query('SELECT public_id, secure_url FROM cvs WHERE user_id = @user_id');
-      return result.recordset[0];
+    const pool = await poolPromise;
+    const result = await pool.request()
+      .input('user_id', sql.Int, userId)
+      .query('SELECT id, public_id, secure_url FROM cvs WHERE user_id = @user_id');
+    return result.recordset[0];
   } catch (error) {
-      throw new Error('Error al obtener el CV: ' + error.message);
+    throw new Error('Error al obtener el CV: ' + error.message);
   }
 }
 

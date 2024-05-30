@@ -24,14 +24,12 @@ router.post('/login', async (req, res) => {
     const user = await getUserByEmail(email);
 
     if (!user) {
-      console.log('User not found');
       return res.status(404).json({ message: 'User not found' });
     }
 
     const isMatch = await bcrypt.compare(password, user.password);
 
     if (!isMatch) {
-      console.log('Invalid credentials');
       return res.status(401).json({ message: 'Invalid credentials' });
     }
 
@@ -43,10 +41,8 @@ router.post('/login', async (req, res) => {
       { expiresIn: '1h' }
     );
 
-    console.log('Token generated:', token);
     res.status(200).json({ token });
   } catch (error) {
-    console.log('Error during login:', error);
     res.status(500).json({ error: error.message });
   }
 });

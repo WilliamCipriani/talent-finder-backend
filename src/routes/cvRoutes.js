@@ -15,28 +15,28 @@ router.post('/upload', authenticate, upload.single('cv'), async (req, res) => {
     const originalFilename = req.file.originalname.replace(/\.[^/.]+$/, "");
     // Subir a Cloudinary
     const result = await new Promise((resolve, reject) => {
-        const stream = cloudinary.uploader.upload_stream(
-          {
-            resource_type: 'raw',
-            public_id: `cv_uploads/${originalFilename}` // Coloca el archivo en una carpeta cv_uploads y usa el nombre original
-          },
-          (error, result) => {
-            if (error) {
-              reject(new Error('Error uploading to Cloudinary'));
-            } else {
-              resolve(result);
-            }
+      const stream = cloudinary.uploader.upload_stream(
+        {
+          resource_type: 'raw',
+          public_id: `cv_uploads/${originalFilename}` // Coloca el archivo en una carpeta cv_uploads y usa el nombre original
+        },
+        (error, result) => {
+          if (error) {
+            reject(new Error('Error uploading to Cloudinary'));
+          } else {
+            resolve(result);
           }
-        );
-        stream.end(req.file.buffer);
-      });
+        }
+      );
+      stream.end(req.file.buffer);
+    });
     const publicId = result.public_id;
     const secureUrl = result.secure_url;
 
     // Guardar en la base de datos
-    await createCV(userId, publicId, secureUrl);
+    const cvId = await createCV(userId, publicId, secureUrl);
 
-    res.status(201).json({ message: 'CV subido exitosamente' });
+    res.status(201).json({ message: 'CV subido exitosamente', cvId });
   } catch (error) {
     console.error('Error al subir el CV:', error);
     res.status(500).json({ error: error.message });
