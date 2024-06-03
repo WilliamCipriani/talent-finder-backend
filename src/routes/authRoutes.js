@@ -36,12 +36,12 @@ router.post('/login', async (req, res) => {
     console.log('JWT_SECRET:', process.env.JWT_SECRET);
 
     const token = jwt.sign(
-      { id: user.id, email: user.email, full_name: user.full_name, role: user.role },
+      { id: user.id, email: user.email, full_name: user.full_name, role_id: user.role_id },
       process.env.JWT_SECRET,
-      { expiresIn: '1h' }
+      { expiresIn: '5h' }
     );
 
-    res.status(200).json({ token });
+    res.status(200).json({ token, role_id: user.role_id });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }

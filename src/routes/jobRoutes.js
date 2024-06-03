@@ -1,39 +1,19 @@
 const express = require('express');
 const jwt = require('jsonwebtoken');
-const { getAllJobs, getJobById, createJob, addResponsibility, addQualification, addBenefit } = require('../models/jobModel');
+const { getAllJobs, getJobById, createJob, addResponsibility, addQualification, addBenefit, getApplications  } = require('../models/jobModel');
+const authenticate = require('../middleware/auth');
 
 const router = express.Router();
 
-// Middleware para verificar el token y obtener el user_id
-const authenticateToken = (req, res, next) => {
-  const authHeader = req.headers['authorization'];
-  const token = authHeader && authHeader.split(' ')[1];
-
-  if (token == null) {
-    return res.sendStatus(401);
-  }
-
-  jwt.verify(token, process.env.JWT_SECRET, (err, user) => {
-    if (err) {
-      return res.sendStatus(403);
-    }
-    req.user = user;
-    next();
-  });
-};
-
 // Crear una convocatoria de empleo
-router.post('/create-job', authenticateToken, async (req, res) => {
+router.post('/create-job', authenticate, async (req, res) => {
   try {
-    const { company, type, title, location, salaryRange, description, responsibilities, qualifications, benefits } = req.body;
-    const role = req.user.role_id; // Obtener el rol del usuario desde el token JWT
-
-    if (role !== 2) {
+    const { company, type, title, location, salaryRange, description, daysPosted, created_at, responsibilities, qualifications, benefits } = req.body;
+    const role = req.user.role_id; // Obtener el rol del usuario desde req.user
+    if (role !== 2) { // Ajusta este valor según el rol necesario para crear trabajos
       return res.status(403).json({ error: 'Acceso denegado' });
     }
-
-    const jobId = await createJob(company, type, title, location, salaryRange, description);
-
+    const jobId = await createJob(company, type, title, location, salaryRange, description, daysPosted, created_at);
     // Insertar responsabilidades
     for (const responsibility of responsibilities) {
       await addResponsibility(jobId, responsibility);
@@ -57,7 +37,7 @@ router.post('/create-job', authenticateToken, async (req, res) => {
 });
 
 // Postular a un trabajo
-router.post('/apply-job', authenticateToken, async (req, res) => {
+router.post('/apply-job', authenticate, async (req, res) => {
   try {
     const { job_id, cv_id } = req.body;
     const user_id = req.user.id;
@@ -102,5 +82,17 @@ router.get('/jobs/:id', async (req, res) => {
     res.status(500).send({ error: 'Error fetching job details' });
   }
 });
+
+// Ruta para obtener las postulaciones
+router.get('/applications',  async (req, res) => {
+  try {
+    const applications = await getApplications();
+    res.json(applications);
+  } catch (error) {
+    console.error('Error fetching applications:', error);
+    res.status(500).json({ error: 'Error fetching applications' });
+  }
+});
+
 
 module.exports = router;

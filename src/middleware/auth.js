@@ -5,6 +5,7 @@ const authenticate = async (req, res, next) => {
   const token = req.header('Authorization').replace('Bearer ', '');
   try {
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
+
     const pool = await poolPromise;
     const result = await pool.request()
       .input('id', decoded.id)
@@ -16,7 +17,9 @@ const authenticate = async (req, res, next) => {
       throw new Error();
     }
 
-    req.user = user;
+    req.user = { ...user, role_id: decoded.role_id };
+    console.log('Authenticated user:', req.user);
+
     next();
   } catch (error) {
     res.status(401).send({ error: 'Please authenticate.' });

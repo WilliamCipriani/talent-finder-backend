@@ -1,17 +1,23 @@
 const { poolPromise } = require('../config/db');
 const sql = require('mssql');
 
-const createJob = async (company, type, title, location, salaryRange, description) => {
+const createJob = async (company, type, title, location, salaryRange, description, daysPosted, created_at) => {
   try {
     const pool = await poolPromise;
     const result = await pool.request()
-      .input('company', company)
-      .input('type', type)
-      .input('title', title)
-      .input('location', location)
-      .input('salaryRange', salaryRange)
-      .input('description', description)
-      .query('INSERT INTO Jobs (company, type, title, location, salaryRange, description) OUTPUT INSERTED.id VALUES (@company, @type, @title, @location, @salaryRange, @description)');
+      .input('company', sql.VarChar, company)
+      .input('type', sql.VarChar, type)
+      .input('title', sql.VarChar, title)
+      .input('location', sql.VarChar, location)
+      .input('salaryRange', sql.VarChar, salaryRange)
+      .input('description', sql.VarChar, description)
+      .input('daysPosted', sql.Int, daysPosted)
+      .input('created_at', sql.DateTime, created_at)
+      .query(`
+        INSERT INTO Jobs (company, type, title, location, salaryRange, description, daysPosted, created_at)
+        OUTPUT INSERTED.id
+        VALUES (@company, @type, @title, @location, @salaryRange, @description, @daysPosted, @created_at)
+      `);
     return result.recordset[0].id;
   } catch (error) {
     throw new Error('Error creating job');
@@ -65,8 +71,8 @@ const addResponsibility = async (job_id, responsibility) => {
   try {
     const pool = await poolPromise;
     await pool.request()
-      .input('job_id', job_id)
-      .input('responsibility', responsibility)
+      .input('job_id', sql.Int, job_id)
+      .input('responsibility', sql.VarChar, responsibility)
       .query('INSERT INTO Responsibilities (job_id, responsibility) VALUES (@job_id, @responsibility)');
   } catch (error) {
     throw new Error('Error adding responsibility');
@@ -77,8 +83,8 @@ const addQualification = async (job_id, qualification) => {
   try {
     const pool = await poolPromise;
     await pool.request()
-      .input('job_id', job_id)
-      .input('qualification', qualification)
+      .input('job_id', sql.Int, job_id)
+      .input('qualification', sql.VarChar, qualification)
       .query('INSERT INTO Qualifications (job_id, qualification) VALUES (@job_id, @qualification)');
   } catch (error) {
     throw new Error('Error adding qualification');
@@ -89,11 +95,37 @@ const addBenefit = async (job_id, benefit) => {
   try {
     const pool = await poolPromise;
     await pool.request()
-      .input('job_id', job_id)
-      .input('benefit', benefit)
+      .input('job_id', sql.Int, job_id)
+      .input('benefit', sql.VarChar, benefit)
       .query('INSERT INTO Benefits (job_id, benefit) VALUES (@job_id, @benefit)');
   } catch (error) {
     throw new Error('Error adding benefit');
+  }
+};
+
+const getApplications = async () => {
+  try {
+    const pool = await poolPromise;
+    const result = await pool.request().query(`
+      SELECT A.[id]
+            ,A.[user_id]
+            ,A.[job_id]
+            ,A.[applied_at]
+            ,A.[cv_id]
+            ,U.full_name
+            ,J.title
+            ,J.salaryRange
+            ,J.company
+            ,C.secure_url
+      FROM [talenFinderdb].[dbo].[Applications] A
+      INNER JOIN Users U ON A.user_id = U.id
+      INNER JOIN Jobs J ON A.job_id = J.id
+      INNER JOIN CVs C ON A.cv_id = C.id
+    `);
+    return result.recordset;
+  } catch (error) {
+    console.error('Error fetching applications:', error);
+    throw new Error('Error fetching applications');
   }
 };
 
@@ -104,4 +136,5 @@ module.exports = {
   addResponsibility,
   addQualification,
   addBenefit,
+  getApplications
 };
