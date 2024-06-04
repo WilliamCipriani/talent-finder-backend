@@ -16,12 +16,14 @@ const cvRoutes = require('./routes/cvRoutes');
 const authRoutes = require('./routes/authRoutes');
 const jobRoutes = require('./routes/jobRoutes')
 const applicationRoutes = require('./routes/applicationRoutes');
+const approvedApplicantsRoutes = require('./routes/approvedApplicantsRoutes');
 
 // Usar rutas
 app.use('/cv', cvRoutes);
 app.use('/auth', authRoutes);
 app.use('/jobs', jobRoutes);
 app.use('/applications', applicationRoutes);
+app.use('/approved-applicants', approvedApplicantsRoutes);
 
 // Ruta de prueba
 app.get('/', (req, res) => {
