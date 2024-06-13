@@ -25,7 +25,20 @@ async function getUserCV(userId) {
   }
 }
 
+async function deleteCV(userId) {
+  try {
+    const pool = await poolPromise;
+    // Marcar el CV como inactivo en lugar de eliminarlo
+    await pool.request()
+      .input('user_id', sql.Int, userId)
+      .query('UPDATE cvs SET active = 0 WHERE user_id = @user_id');
+  } catch (error) {
+    throw new Error('Error al eliminar el CV: ' + error.message);
+  }
+}
+
 module.exports = {
   createCV,
   getUserCV,
+  deleteCV,
 };

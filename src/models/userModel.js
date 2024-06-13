@@ -3,15 +3,9 @@ const bcrypt = require('bcryptjs');
 
 const createUser = async (email, password, full_name, role_id = 1) => {
   try {
-    console.log('Hashing password');
     const hashedPassword = await bcrypt.hash(password, 10);
-    console.log('Password hashed successfully');
-
-    console.log('Getting pool promise');
     const pool = await poolPromise;
-    console.log('Pool promise acquired');
 
-    console.log('Preparing database request');
     const result = await pool.request()
       .input('email', email)
       .input('username', email)
@@ -19,7 +13,6 @@ const createUser = async (email, password, full_name, role_id = 1) => {
       .input('full_name', full_name)
       .input('role_id', role_id)
       .query('INSERT INTO Users (email, username, password, full_name, role_id) VALUES (@email, @username, @password, @full_name, @role_id)');
-    console.log('User created successfully:', result);
 
     return result;
   } catch (error) {

@@ -1,7 +1,7 @@
 const express = require('express');
 const multer = require('multer');
 const cloudinary = require('../config/cloudinary');
-const { createCV, getUserCV } = require('../models/cvModel'); // Asegúrate de importar getUserCV
+const { createCV, getUserCV, deleteCV  } = require('../models/cvModel'); // Asegúrate de importar getUserCV
 const authenticate = require('../middleware/auth');
 
 const router = express.Router();
@@ -54,6 +54,28 @@ router.get('/user-cv', authenticate, async (req, res) => {
     }
   } catch (error) {
     console.error('Error al obtener el CV:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+router.delete('/delete', authenticate, async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const cv = await getUserCV(userId);
+
+    if (!cv) {
+      return res.status(404).json({ message: 'No CV found' });
+    }
+
+    // Eliminar de Cloudinary
+    await cloudinary.uploader.destroy(cv.public_id, { resource_type: 'raw' });
+
+    // Marcar el CV como inactivo
+    await deleteCV(userId);
+
+    res.status(200).json({ message: 'CV eliminado exitosamente' });
+  } catch (error) {
+    console.error('Error al eliminar el CV:', error);
     res.status(500).json({ error: error.message });
   }
 });

@@ -18,7 +18,6 @@ const authenticate = async (req, res, next) => {
     }
 
     req.user = { ...user, role_id: decoded.role_id };
-    console.log('Authenticated user:', req.user);
 
     next();
   } catch (error) {
