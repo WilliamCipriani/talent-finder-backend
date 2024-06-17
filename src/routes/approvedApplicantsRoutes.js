@@ -1,5 +1,6 @@
 const express = require('express');
 const router = express.Router();
+const { getApplicationsWithPublicId, getApprovedApplicants } = require('../models/ApprovedApplicant');
 
 router.get('/approvedApplicants', async (req, res) => {
     try {
