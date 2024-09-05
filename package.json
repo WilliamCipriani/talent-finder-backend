@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"No tests specified\""
   },
   "keywords": [],
   "author": "",
@@ -15,9 +15,8 @@
     "dotenv": "^16.4.5",
     "express": "^4.19.2",
     "jsonwebtoken": "^9.0.2",
-    "mssql": "^10.0.2",
+    "mssql": "^11.0.1",
     "multer": "^1.4.5-lts.1"
   },
-  "devDependencies": {},
   "description": ""
 }
