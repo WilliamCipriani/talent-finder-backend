@@ -5,7 +5,7 @@ require('dotenv').config();
 const app = express();
 
 app.use(cors({
-  origin: 'http://localhost:3000', // Permitir solicitudes desde este origen
+  origin: 'https://www.talendfinder.info', // Permitir solicitudes desde este origen
   credentials: true, // Permitir el envío de cookies y encabezados de autenticación
 }));
 
