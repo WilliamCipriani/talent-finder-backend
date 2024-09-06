@@ -120,4 +120,20 @@ router.get('/applications/:userId', async (req, res) => {
   }
 });
 
+router.get('/rejected/:userId', async (req, res) => {
+  const { userId } = req.params;
+  try {
+    const pool = await poolPromise;
+    const result = await pool.request()
+      .input('userId', sql.Int, userId)
+      .query('SELECT * FROM [dbo].[RejectedApplicants] WHERE user_id = @userId');
+    
+    res.status(200).json(result.recordset);
+  } catch (error) {
+    console.error('Error fetching rejected applicants:', error);
+    res.status(500).json({ error: 'Error fetching rejected applicants' });
+  }
+});
+
+
 module.exports = router;
