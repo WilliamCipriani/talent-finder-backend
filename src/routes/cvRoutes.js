@@ -3,13 +3,14 @@ const multer = require('multer');
 const cloudinary = require('../config/cloudinary');
 const { createCV, getUserCV, deleteCV  } = require('../models/cvModel'); // Asegúrate de importar getUserCV
 const authenticate = require('../middleware/auth');
+const validateApiKey = require('../middleware/validateApiKey');
 
 const router = express.Router();
 
 const storage = multer.memoryStorage(); // Usar almacenamiento en memoria
 const upload = multer({ storage: storage });
 
-router.post('/upload', authenticate, upload.single('cv'), async (req, res) => {
+router.post('/upload', validateApiKey, authenticate, upload.single('cv'), async (req, res) => {
   try {
     const userId = req.user.id;
     const originalFilename = req.file.originalname.replace(/\.[^/.]+$/, "");
@@ -18,7 +19,7 @@ router.post('/upload', authenticate, upload.single('cv'), async (req, res) => {
       const stream = cloudinary.uploader.upload_stream(
         {
           resource_type: 'raw',
-          public_id: `cv_uploads/${originalFilename}` // Coloca el archivo en una carpeta cv_uploads y usa el nombre original
+          public_id: `cv_uploads/${originalFilename}` 
         },
         (error, result) => {
           if (error) {
@@ -43,7 +44,7 @@ router.post('/upload', authenticate, upload.single('cv'), async (req, res) => {
   }
 });
 
-router.get('/user-cv', authenticate, async (req, res) => {
+router.get('/user-cv', validateApiKey, authenticate, async (req, res) => {
   try {
     const userId = req.user.id;
     const cv = await getUserCV(userId);
@@ -58,7 +59,7 @@ router.get('/user-cv', authenticate, async (req, res) => {
   }
 });
 
-router.delete('/delete', authenticate, async (req, res) => {
+router.delete('/delete', validateApiKey, authenticate, async (req, res) => {
   try {
     const userId = req.user.id;
     const cv = await getUserCV(userId);
