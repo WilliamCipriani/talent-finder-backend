@@ -3,6 +3,11 @@ const { poolPromise } = require('../config/db');
 
 const authenticate = async (req, res, next) => {
   const token = req.header('Authorization').replace('Bearer ', '');
+
+  if (!token) {
+    return res.status(401).json({ error: 'Autenticación requerida. Token no proporcionado.' });
+  }
+
   try {
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
 
@@ -21,7 +26,15 @@ const authenticate = async (req, res, next) => {
 
     next();
   } catch (error) {
-    res.status(401).send({ error: 'Please authenticate.' });
+    // Diferenciar entre un token expirado o un token inválido
+    if (error.name === 'TokenExpiredError') {
+      return res.status(401).json({ error: 'El token ha expirado. Inicia sesión nuevamente.' });
+    } else if (error.name === 'JsonWebTokenError') {
+      return res.status(401).json({ error: 'Token inválido. Autenticación fallida.' });
+    } else {
+      // Otros errores
+      return res.status(500).json({ error: 'Error en la autenticación. Inténtalo de nuevo más tarde.' });
+    }
   }
 };
 

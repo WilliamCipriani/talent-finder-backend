@@ -6,7 +6,10 @@ const app = express();
 
 app.use(cors({
   origin: 'https://www.talendfinder.info', // Permitir solicitudes desde este origen
-  credentials: true, // Permitir el envío de cookies y encabezados de autenticación
+  //origin: 'http://localhost:3000',
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'api_key'],
 }));
 
 app.use(express.json());// Middleware para parsear JSON
