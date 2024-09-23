@@ -116,7 +116,7 @@ const getApplications = async () => {
             ,J.title
             ,J.salaryRange
             ,J.company
-            ,C.secure_url
+            ,C.cv_data
       FROM [talenFinderdb].[dbo].[Applications] A
       INNER JOIN Users U ON A.user_id = U.id
       INNER JOIN Jobs J ON A.job_id = J.id

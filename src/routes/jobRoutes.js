@@ -31,7 +31,7 @@ router.post('/create-job', authenticate, async (req, res) => {
 
     res.status(201).json({ message: 'Trabajo creado exitosamente' });
   } catch (error) {
-    console.error('Error creating job:', error);
+    console.error('Error creating job at:', error.stack); 
     res.status(500).json({ error: 'Error creating job' });
   }
 });
