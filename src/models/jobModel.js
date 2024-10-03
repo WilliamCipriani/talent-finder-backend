@@ -1,7 +1,7 @@
 const { poolPromise } = require('../config/db');
 const sql = require('mssql');
 
-const createJob = async (company, type, title, location, salaryRange, description, daysPosted, created_at) => {
+const createJob = async (company, type, title, location, salaryRange, description, daysPosted) => {
   try {
     const pool = await poolPromise;
     const result = await pool.request()
@@ -12,11 +12,10 @@ const createJob = async (company, type, title, location, salaryRange, descriptio
       .input('salaryRange', sql.VarChar, salaryRange)
       .input('description', sql.VarChar, description)
       .input('daysPosted', sql.Int, daysPosted)
-      .input('created_at', sql.DateTime, created_at)
       .query(`
         INSERT INTO Jobs (company, type, title, location, salaryRange, description, daysPosted, created_at)
         OUTPUT INSERTED.id
-        VALUES (@company, @type, @title, @location, @salaryRange, @description, @daysPosted, @created_at)
+        VALUES (@company, @type, @title, @location, @salaryRange, @description, @daysPosted, GETDATE())
       `);
     return result.recordset[0].id;
   } catch (error) {
@@ -28,12 +27,16 @@ const createJob = async (company, type, title, location, salaryRange, descriptio
 const getAllJobs = async () => {
   try {
     const pool = await poolPromise;
-    const result = await pool.request().query('SELECT id, title, company, type, location, salaryRange, description FROM Jobs');
+    // Ordenar los trabajos por la fecha de creación en orden descendente
+    const result = await pool.request().query(
+      'SELECT id, title, company, type, location, salaryRange, description FROM Jobs ORDER BY created_at DESC'
+    );
     return result.recordset;
   } catch (err) {
     throw new Error('Error fetching jobs');
   }
 };
+
 
 // Función para obtener los detalles de un trabajo específico
 const getJobById = async (jobId) => {

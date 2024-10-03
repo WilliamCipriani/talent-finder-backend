@@ -65,7 +65,6 @@ router.get('/user/:user_id', async (req, res) => {
 });
 
 // Obtener las postulaciones del usuario con su estado
-// Obtener las postulaciones del usuario con su estado
 router.get('/applications/:userId', async (req, res) => {
   try {
     const userId = req.params.userId;

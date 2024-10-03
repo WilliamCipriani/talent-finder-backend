@@ -40,8 +40,8 @@ router.get('/approvedApplicants', async (req, res) => {
       notPassed,
       byJob,
       byCompany,
-      approvedApplicants, // Detalles de los solicitantes aprobados
-      rejectedApplicants, // Detalles de los solicitantes rechazados
+      approvedApplicants, 
+      rejectedApplicants, 
       rejectedByJob,
       rejectedByCompany
     });

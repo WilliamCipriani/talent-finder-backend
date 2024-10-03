@@ -34,7 +34,53 @@ const getUserByEmail = async (email) => {
   }
 };
 
+const getUserByResetToken = async (resetTokenHash) => {
+  try {
+    const pool = await poolPromise;
+    const result = await pool.request()
+      .input('resetToken', resetTokenHash)
+      .query('SELECT * FROM Users WHERE reset_token = @resetToken');
+    return result.recordset[0];
+  } catch (error) {
+    console.error('Error al buscar usuario por token de restablecimiento:', error);
+    throw new Error('Error al buscar usuario por token de restablecimiento');
+  }
+};
+
+// Función para actualizar el token de restablecimiento de contraseña
+const updateUserResetToken = async (userId, resetTokenHash, resetTokenExpiry) => {
+  try {
+    const pool = await poolPromise;
+    const expiryDate = new Date(resetTokenExpiry);
+    await pool.request()
+      .input('userId', userId)
+      .input('resetToken', resetTokenHash)
+      .input('resetTokenExpiry', expiryDate)
+      .query('UPDATE Users SET reset_token = @resetToken, reset_token_expiry = @resetTokenExpiry WHERE id = @userId');
+  } catch (error) {
+    console.error('Error al actualizar el token de restablecimiento:', error);
+    throw new Error('Error al actualizar el token de restablecimiento');
+  }
+};
+
+// Función para actualizar la contraseña del usuario
+const updateUserPassword = async (userId, hashedPassword) => {
+  try {
+    const pool = await poolPromise;
+    await pool.request()
+      .input('userId', userId)
+      .input('password', hashedPassword)
+      .query('UPDATE Users SET password = @password, reset_token = NULL, reset_token_expiry = NULL WHERE id = @userId');
+  } catch (error) {
+    console.error('Error al actualizar la contraseña:', error);
+    throw new Error('Error al actualizar la contraseña');
+  }
+};
+
 module.exports = {
   createUser,
-  getUserByEmail
+  getUserByEmail,
+  getUserByResetToken,
+  updateUserResetToken,
+  updateUserPassword
 };

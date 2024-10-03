@@ -20,6 +20,7 @@ const authRoutes = require('./routes/authRoutes');
 const jobRoutes = require('./routes/jobRoutes')
 const applicationRoutes = require('./routes/applicationRoutes');
 const approvedApplicantsRoutes = require('./routes/approvedApplicantsRoutes');
+const passwordRoutes = require('./routes/passwordRoutes');
 
 // Usar rutas
 app.use('/cv', cvRoutes);
@@ -27,6 +28,7 @@ app.use('/auth', authRoutes);
 app.use('/jobs', jobRoutes);
 app.use('/applications', applicationRoutes);
 app.use('/approved-applicants', approvedApplicantsRoutes);
+app.use('/auth', passwordRoutes)
 
 // Ruta de prueba
 app.get('/', (req, res) => {
