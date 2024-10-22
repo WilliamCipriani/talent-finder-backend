@@ -77,10 +77,39 @@ const updateUserPassword = async (userId, hashedPassword) => {
   }
 };
 
+const updateUserProfileImage = async (userId, imageBuffer) => {
+  try {
+    const pool = await poolPromise;
+    await pool.request()
+      .input('userId', userId)
+      .input('profileImage', imageBuffer)
+      .query('UPDATE Users SET profile_image = @profileImage WHERE id = @userId');
+  } catch (error) {
+    console.error('Error al actualizar la imagen de perfil:', error);
+    throw new Error('Error al actualizar la imagen de perfil');
+  }
+};
+
+const getUserById = async (userId) => {
+  try {
+    const pool = await poolPromise;
+    const result = await pool.request()
+      .input('userId', userId)
+      .query('SELECT * FROM Users WHERE id = @userId');
+    return result.recordset[0]; // Retorna el primer resultado, si existe
+  } catch (error) {
+    console.error('Error al obtener el usuario por ID:', error);
+    throw new Error('Error al obtener el usuario por ID');
+  }
+};
+
+
 module.exports = {
   createUser,
   getUserByEmail,
   getUserByResetToken,
   updateUserResetToken,
-  updateUserPassword
+  updateUserPassword,
+  updateUserProfileImage,
+  getUserById
 };

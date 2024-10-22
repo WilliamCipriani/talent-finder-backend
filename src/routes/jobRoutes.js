@@ -1,40 +1,47 @@
 const express = require('express');
+const multer = require('multer'); // Importar multer
 const jwt = require('jsonwebtoken');
 const { getAllJobs, getJobById, createJob, addResponsibility, addQualification, addBenefit, getApplications  } = require('../models/jobModel');
 const authenticate = require('../middleware/auth');
 
 const router = express.Router();
 
+const storage = multer.memoryStorage();
+const upload = multer({ storage: storage });
+
 // Crear una convocatoria de empleo
-router.post('/create-job', authenticate, async (req, res) => {
+router.post('/create-job', authenticate, upload.single('company_image'), async (req, res) => {
   try {
-    const { company, type, title, location, salaryRange, description, daysPosted, created_at, responsibilities, qualifications, benefits } = req.body;
-    const role = req.user.role_id; // Obtener el rol del usuario desde req.user
-    if (role !== 2) { // Ajusta este valor según el rol necesario para crear trabajos
+    const { company, type, title, location, salaryRange, description, daysPosted, responsibilities, qualifications, benefits } = req.body;
+    const role = req.user.role_id;
+
+    if (role !== 2) {
       return res.status(403).json({ error: 'Acceso denegado' });
     }
-    const jobId = await createJob(company, type, title, location, salaryRange, description, daysPosted, created_at);
-    // Insertar responsabilidades
+
+    const company_image = req.file ? req.file.buffer : null; // Obtener el buffer de la imagen cargada
+
+    const jobId = await createJob(company, type, title, location, salaryRange, description, daysPosted, company_image);
+
     for (const responsibility of responsibilities) {
       await addResponsibility(jobId, responsibility);
     }
 
-    // Insertar cualificaciones
     for (const qualification of qualifications) {
       await addQualification(jobId, qualification);
     }
 
-    // Insertar beneficios
     for (const benefit of benefits) {
       await addBenefit(jobId, benefit);
     }
 
     res.status(201).json({ message: 'Trabajo creado exitosamente' });
   } catch (error) {
-    console.error('Error creating job at:', error.stack); 
+    console.error('Error creating job:', error.stack);
     res.status(500).json({ error: 'Error creating job' });
   }
 });
+
 
 // Postular a un trabajo
 router.post('/apply-job', authenticate, async (req, res) => {
